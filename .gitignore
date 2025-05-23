@@ -1,0 +1,19 @@
+# Python virtual environment
+.venv/
+env/
+# Byte-code files
+__pycache__/
+*.pyc
+
+# Logs and temporary files
+*.log
+# For SQLite database files (e.g., data/your_database.db)
+*.sqlite3 
+# MinIO data persistence folder
+data/minio_data/ 
+# If processed data is large and can be regenerated
+data/processed/ 
+
+
+# Operating System files
+Thumbs.db
