@@ -17,3 +17,11 @@ data/processed/
 
 # Operating System files
 Thumbs.db
+
+# Environment and secret files
+.env
+*.env
+aws_credentials.json
+*.pem
+*.key
+*.crt
