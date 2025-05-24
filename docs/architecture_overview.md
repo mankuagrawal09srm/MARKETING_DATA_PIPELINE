@@ -1,19 +1,4 @@
 # Architecture Overview
-```mermaid
-graph TD
-    A[Raw Data (CSV, JSON)] --> B[Data Ingestion (data_ingestion.py)]
-    B --> C[Data Quality Checks (dq_checks.py)]
-    C --> D[Data Transformations (transformations.py)]
-    D --> E[Feature Engineering (feature_engineering.py)]
-    E --> F[Data Warehouse (Snowflake)]
-    F --> G[Analytics / ML Models / Dashboards]
-
-    subgraph Logging
-        L[Logs (logs/ingestion.log)]
-    end
-
-    B --> L
-    C --> L
 
 ## Objective
 
