@@ -1,164 +1,103 @@
-# src/data_ingestion.py
-import os
-import json
-import pandas as pd
-import boto3
-import sqlite3
-from botocore.client import Config
-from botocore.exceptions import ClientError
+# src/snowflake_ingestion_from_s3.py
+import logging
+import snowflake.connector
 
-# --- Configuration for MinIO (Local S3 Mock) ---
-# IMPORTANT: This is the data port (9000), not the console port (9001)
-MINIO_ENDPOINT = "http://127.0.0.1:9000"
-# Use your custom username and password if you changed them
-MINIO_ACCESS_KEY = "Mayank_1995" # Make sure to update this!
-MINIO_SECRET_KEY = "May09@95#" # Make sure to update this!
-RAW_DATA_BUCKET = "raw-marketing-data"
+# --- Configure Logging ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# --- Configuration for SQLite (Local Database) ---
-# This will be created in your data/ directory
-DB_FILE = "data/marketing_pipeline.db"
+# --- Snowflake Configuration ---
+SNOWFLAKE_ACCOUNT = "KXCRTSK-JT76968"
+SNOWFLAKE_USER = "Mayank"
+SNOWFLAKE_PASSWORD = "Mayank@09051995"
+SNOWFLAKE_WAREHOUSE = "COMPUTE_WH"
+SNOWFLAKE_DATABASE = "MARKETING_DATE"
+SNOWFLAKE_SCHEMA = "STAGE_DATE"
 
-def get_s3_client():
-    """
-    Initializes and returns an S3 client connected to MinIO.
-    """
+# --- External Stage and Files ---
+S3_STAGE_CSV = "my_csv_stage"
+S3_STAGE_json = "my_json_stage"
+CSV_FILE = "my_data.csv"
+JSON_FILE = "my_data.json"
+
+def get_snowflake_connection():
     try:
-        s3_client = boto3.client(
-            "s3",
-            endpoint_url=MINIO_ENDPOINT,
-            aws_access_key_id=MINIO_ACCESS_KEY,
-            aws_secret_access_key=MINIO_SECRET_KEY,
-            config=Config(signature_version='s3v4')
+        conn = snowflake.connector.connect(
+            account=SNOWFLAKE_ACCOUNT,
+            user=SNOWFLAKE_USER,
+            password=SNOWFLAKE_PASSWORD,
+            warehouse=SNOWFLAKE_WAREHOUSE,
+            database=SNOWFLAKE_DATABASE,
+            schema=SNOWFLAKE_SCHEMA
         )
-        # Verify connection by listing buckets (optional, but good for debugging)
-        s3_client.list_buckets()
-        print(f"Successfully connected to MinIO at {MINIO_ENDPOINT}")
-        return s3_client
-    except ClientError as e:
-        print(f"Error connecting to MinIO: {e}")
-        raise
-    except Exception as e:
-        print(f"An unexpected error occurred during MinIO client setup: {e}")
-        raise
-
-def create_sqlite_connection():
-    """
-    Establishes a connection to the SQLite database.
-    Creates the database file if it doesn't exist.
-    """
-    # Ensure the data directory exists for the DB file
-    os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        print(f"Successfully connected to SQLite database: {DB_FILE}")
+        logging.info("Connected to Snowflake.")
         return conn
-    except sqlite3.Error as e:
-        print(f"Error connecting to SQLite database: {e}")
-        raise
-
-def ingest_clickstream_data(s3_client, db_conn):
-    """
-    Reads clickstream data from MinIO and loads it into a SQLite table.
-    """
-    print("Ingesting clickstream data...")
-    try:
-        obj = s3_client.get_object(Bucket=RAW_DATA_BUCKET, Key="mock_clickstream_data.json")
-        # --- CHANGE START ---
-        # Access the 'Body' key of the response object to get the StreamingBody, then read it.
-        #clickstream_data = json.loads(obj.read().decode('utf-8'))
-        clickstream_data = json.loads(obj['Body'].read().decode('utf-8'))
-        # --- CHANGE END ---
-        df = pd.DataFrame(clickstream_data)
-
-        # Basic schema definition for SQLite
-        create_table_sql = """
-        CREATE TABLE IF NOT EXISTS raw_clickstream (
-            event_id TEXT PRIMARY KEY,
-            timestamp TEXT,
-            user_id INTEGER,
-            event_type TEXT,
-            page_url TEXT,
-            duration_ms INTEGER
-        );
-        """
-        cursor = db_conn.cursor()
-        cursor.execute(create_table_sql)
-        db_conn.commit()
-
-        # Load data into SQLite
-        df.to_sql('raw_clickstream', db_conn, if_exists='replace', index=False)
-        print(f"Successfully ingested {len(df)} records into raw_clickstream table.")
-    except ClientError as e:
-        print(f"Error reading clickstream data from MinIO: {e}")
-        raise
     except Exception as e:
-        print(f"An unexpected error occurred during clickstream ingestion: {e}")
+        logging.error(f"Snowflake connection failed: {e}")
         raise
 
-def ingest_customer_demographics_data(s3_client, db_conn):
+def load_csv(cursor):
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS raw_customer_demographics (
+        customer_id INTEGER PRIMARY KEY,
+        first_name VARCHAR,
+        last_name VARCHAR,
+        email VARCHAR,
+        region VARCHAR,
+        signup_date DATE
+    );
     """
-    Reads customer demographics data from MinIO and loads it into a SQLite table.
+    copy_into_sql = f"""
+    COPY INTO raw_customer_demographics
+    FROM @{S3_STAGE_CSV}/
+    FILE_FORMAT = csv_format
+    PATTERN = '.*\\.csv';
     """
-    print("Ingesting customer demographics data...")
-    try:
-        obj = s3_client.get_object(Bucket=RAW_DATA_BUCKET, Key="mock_customer_demographics.csv")
-        # --- CHANGE START ---
-        # Pass the 'Body' StreamingBody directly to pandas.read_csv
-        #df = pd.read_csv(obj)
-        df = pd.read_csv(obj['Body'])
-        # --- CHANGE END ---
+    cursor.execute(create_table_sql)
+    cursor.execute(copy_into_sql)
+    logging.info("CSV file loaded into raw_customer_demographics.")
 
-        # Basic schema definition for SQLite
-        create_table_sql = """
-        CREATE TABLE IF NOT EXISTS raw_customer_demographics (
-            customer_id INTEGER PRIMARY KEY,
-            first_name TEXT,
-            last_name TEXT,
-            email TEXT,
-            region TEXT,
-            signup_date TEXT
-        );
-        """
-        cursor = db_conn.cursor()
-        cursor.execute(create_table_sql)
-        db_conn.commit()
-
-        # Load data into SQLite
-        df.to_sql('raw_customer_demographics', db_conn, if_exists='replace', index=False)
-        print(f"Successfully ingested {len(df)} records into raw_customer_demographics table.")
-    except ClientError as e:
-        print(f"Error reading customer demographics data from MinIO: {e}")
-        raise
-    except Exception as e:
-        print(f"An unexpected error occurred during customer demographics ingestion: {e}")
-        raise
+def load_json(cursor):
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS raw_clickstream (
+        event_id VARCHAR,
+        timestamp TIMESTAMP_LTZ,
+        user_id INTEGER,
+        event_type VARCHAR,
+        page_url VARCHAR,
+        duration_ms INTEGER
+    );
+    """
+    copy_into_sql = f"""
+    COPY INTO raw_clickstream
+    FROM @{S3_STAGE_json}/
+    FILE_FORMAT = json_format
+    MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
+    """
+    cursor.execute(create_table_sql)
+    cursor.execute(copy_into_sql)
+    logging.info("JSON file loaded into raw_clickstream.")
 
 def main():
-    s3_client = None
-    db_conn = None
+    conn = None
     try:
-        s3_client = get_s3_client()
-        db_conn = create_sqlite_connection()
+        conn = get_snowflake_connection()
+        cursor = conn.cursor()
 
-        ingest_clickstream_data(s3_client, db_conn)
-        ingest_customer_demographics_data(s3_client, db_conn)
+        load_csv(cursor)
+        load_json(cursor)
 
-        print("\nData ingestion pipeline completed successfully.")
-
-        # Optional: Verify data in SQLite
-        cursor = db_conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM raw_clickstream;")
-        print(f"Total records in raw_clickstream: {cursor.fetchone()}")
         cursor.execute("SELECT COUNT(*) FROM raw_customer_demographics;")
-        print(f"Total records in raw_customer_demographics: {cursor.fetchone()}")
+        logging.info(f"CSV Table Record Count: {cursor.fetchone()[0]}")
+
+        cursor.execute("SELECT COUNT(*) FROM raw_clickstream;")
+        logging.info(f"JSON Table Record Count: {cursor.fetchone()[0]}")
 
     except Exception as e:
-        print(f"\nData ingestion pipeline failed: {e}")
+        logging.error(f"Data ingestion failed: {e}")
     finally:
-        if db_conn:
-            db_conn.close()
-            print("SQLite connection closed.")
+        if conn:
+            conn.close()
+            logging.info("Snowflake connection closed.")
 
 if __name__ == "__main__":
     main()
