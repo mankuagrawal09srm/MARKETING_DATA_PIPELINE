@@ -1,10 +1,7 @@
 # Architecture Overview
-
-This diagram illustrates the key components and data flow of the solution.
-
 ```mermaid
 graph TD
-    A[Raw Data (CSV, JSON)] --> B[Data Ingestion (data_ingestion.py)]
+    A[Raw Data (CSV, JSON)] --> B[Data Ingestion (ingestion.py)]
     B --> C[Data Quality Checks (dq_checks.py)]
     C --> D[Data Transformations (transformations.py)]
     D --> E[Feature Engineering (feature_engineering.py)]
@@ -17,10 +14,6 @@ graph TD
 
     B --> L
     C --> L
-
-
-
-# Architecture Overview
 
 ## Objective
 
