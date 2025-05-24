@@ -1,6 +1,5 @@
 # Architecture Overview
 
-```mermaid
 graph TD
     A[Raw Data (CSV, JSON)] --> B[Data Ingestion (data_ingestion.py)]
     B --> C[Data Quality Checks (dq_checks.py)]
@@ -10,7 +9,7 @@ graph TD
     F --> G[Analytics / ML Models / Dashboards]
 
     subgraph Logging
-      L[Logs (logs/ingestion.log)]
+        L[Logs (logs/ingestion.log)]
     end
 
     B --> L
