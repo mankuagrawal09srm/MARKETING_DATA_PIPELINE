@@ -1,5 +1,5 @@
 # Architecture Overview
-
+```mermaid
 graph TD
     A[Raw Data (CSV, JSON)] --> B[Data Ingestion (data_ingestion.py)]
     B --> C[Data Quality Checks (dq_checks.py)]
