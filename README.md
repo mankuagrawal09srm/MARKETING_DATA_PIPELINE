@@ -1,9 +1,13 @@
-Marketing Data Pipeline: 
+
+# Marketing Data Pipeline
 
 This project implements a data pipeline to process and load marketing data from AWS S3 into Snowflake. It includes ingestion of CSV and JSON data, data quality (DQ) checks, idempotent loading, logging, and basic performance tuning using Snowflake best practices.
 
-Project Structure
+---
 
+## 📁 Project Structure
+
+```
 Marketing_data_pipeline/
 ├── data/                         # Sample input files (CSV, JSON)
 ├── docs/                         # Documentation (architecture, data model)
@@ -13,124 +17,129 @@ Marketing_data_pipeline/
 │   └── ingestion.log
 ├── src/                          
 │   ├── dq_checks.py              # Data quality checks
-│   ├── data_ingestion.py              # Ingestion logic
+│   ├── data_ingestion.py         # Ingestion logic
 │   ├── utils.py                  # Helper functions (Snowflake connection, logger)
 │   ├── main.py                   # Script to orchestrate the pipeline
-|   ├── feature_engineering.py    # script to test conceptual features
-|   └── transformations.py        # Future implementation in case of large data ingestion.
-├── .env                          # Environment variables (Snowflake credentials)
+│   ├── feature_engineering.py    # Conceptual feature testing
+│   └── transformations.py        # Future data transformations
+├── .env                          # Snowflake credentials (not committed)
 ├── README.md
+```
 
-Overview: 
-This pipeline is designed to load marketing engagement data 
-(customer demographics and clickstream events) from S3 into Snowflake. The processed data can be used in downstream dashboards and machine learning models.
+---
 
-Key features:
-Loads structured (CSV) and semi-structured (JSON) data.
+## 📊 Overview
 
-Performs data quality checks to validate the integrity of incoming data.
+This pipeline is designed to load marketing engagement data — customer demographics and clickstream events — from S3 into Snowflake. The processed data can be used in dashboards and ML models.
 
-Ensures idempotency by truncating the target tables before reloading.
+---
 
-Implements logging to both a local file and optionally to a Snowflake logging table.
+## 🚀 Key Features
 
-Applies basic performance optimizations like clustering.
+- Loads structured (CSV) and semi-structured (JSON) data
+- Performs data quality checks to validate the integrity of incoming data
+- Ensures idempotency by truncating target tables before loading
+- Logs events both locally and optionally to Snowflake
+- Adds clustering for basic performance tuning
 
-Input Datasets
-CSV file: Contains customer demographics such as customer_id, first_name, email, signup_date.
+---
 
-JSON file: Contains clickstream event data such as event_type, page_url, duration_ms.
+## 📥 Input Datasets
 
-Both datasets are placed in an S3 bucket and accessed through Snowflake external stages.
+- **CSV**: Customer demographics (`customer_id`, `first_name`, `email`, `signup_date`)
+- **JSON**: Clickstream events (`event_type`, `page_url`, `duration_ms`)
 
-How to Run the Pipeline
-1. Clone the repository
+Both datasets are stored in an S3 bucket and read via Snowflake external stages.
 
-git clone https://github.com/yourusername/Marketing_data_pipeline.git
-cd Marketing_data_pipeline
+---
 
-2. (Optional) Create and activate a virtual environment
+## 🛠 How to Run the Pipeline
 
-python -m venv venv
-source venv/bin/activate    # On Windows, use venv\Scripts\activate
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/Marketing_data_pipeline.git
+   cd Marketing_data_pipeline
+   ```
 
-3. Install Python dependencies
+2. **(Optional) Create and activate a virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate    # On Windows: venv\Scripts\activate
+   ```
 
-pip install -r requirements.txt
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-4. Set up your environment file
-Create a .env file in the project root with the following content:
+4. **Set up environment variables**
 
-SNOWFLAKE_ACCOUNT=your_account
-SNOWFLAKE_USER=your_username
-SNOWFLAKE_PASSWORD=your_password
-SNOWFLAKE_WAREHOUSE=your_warehouse
-SNOWFLAKE_DATABASE=your_database
-SNOWFLAKE_SCHEMA=your_schema
-5. Run the pipeline
+   Create a `.env` file in the root directory with the following:
+   ```ini
+   SNOWFLAKE_ACCOUNT=your_account
+   SNOWFLAKE_USER=your_username
+   SNOWFLAKE_PASSWORD=your_password
+   SNOWFLAKE_WAREHOUSE=your_warehouse
+   SNOWFLAKE_DATABASE=your_database
+   SNOWFLAKE_SCHEMA=your_schema
+   ```
 
-python src/main.py
+5. **Run the pipeline**
+   ```bash
+   python src/main.py
+   ```
 
-This script will:
-Load CSV and JSON data into Snowflake.
+---
 
-Run data quality checks.
+## ⚙️ Features Implemented
 
-Log results to the local log file and optionally into Snowflake.
+### Ingestion Logic
+- Loads files via `COPY INTO` from S3 external stages
+- Automatically creates tables if they don't exist
+- Truncates before loading to ensure idempotency
 
-Features Implemented:
-Ingestion Logic
-Loads CSV and JSON files using Snowflake’s COPY INTO command from external stages.
+### Data Quality Checks
+- Null checks on critical columns
+- Uniqueness validation on `customer_id`
+- Row count validation
 
-Tables are created if they do not exist.
+Logged into:
+- Local log file
+- Optionally: Snowflake table `dq_check_logs`
 
-Existing data is truncated before load to ensure idempotency.
+### Logging
+- Local: `logs/ingestion.log`
+- Optional Snowflake table: `PIPELINE_LOGS`
 
-Data Quality Checks
-Null check on critical columns like customer_id, email, and signup_date.
+### Performance Optimization
+- Adds clustering key on:
+   ```sql
+   ALTER TABLE raw_customer_demographics CLUSTER BY (customer_id);
+   ```
 
-Uniqueness check on customer_id.
+---
 
-Row count check to verify records were loaded.
+## 📚 Documentation
 
-Implemented in dq_checks.py.
+- [`docs/architecture_overview.md`](docs/architecture_overview.md): Design and flow of the pipeline
+- [`docs/data_model.md`](docs/data_model.md): Schema and table descriptions
 
-Logging
-Pipeline logs are stored in logs/ingestion.log.
+---
 
-Optionally logs execution metadata to a Snowflake table PIPELINE_LOGS if created.
+## 🧰 Technologies Used
 
-Performance Optimization
-A clustering key is added on signup_date in the raw_customer_demographics table to improve query performance.
+- Python 3.9+
+- Snowflake (data warehouse)
+- AWS S3 (source data)
+- `dotenv` for credential management
+- Python’s standard `logging` module
 
-sql
-ALTER TABLE raw_customer_demographics CLUSTER BY (customer_id);
+---
 
-Documentation
-Refer to the following files inside the docs/ directory:
+## 🔮 Potential Future Enhancements
 
-architecture_overview.md: Explains the design and flow of the pipeline.
-
-data_model.md: Details the structure of the input and output tables.
-
-Technologies Used
-Python 3.9+
-
-Snowflake (data warehouse)
-
-AWS S3 (data source)
-
-Logging module (Python standard library)
-
-dotenv for managing credentials via .env file
-
-Potential Future Enhancements
-Add orchestration using Apache Airflow or Step Functions
-
-Implement alerting for failed data quality checks (e.g., via Slack, email)
-
-Store failed records separately for quarantine and debugging
-
-Add unit tests using pytest and unittest.mock
-
-Add schema validation and record freshness checks
+- Orchestration with Apache Airflow or AWS Step Functions
+- Alerting for failed DQ checks (Slack, email)
+- Quarantine zone for failed records
+- Schema validation and record freshness checks
+- Unit testing using `pytest` and `unittest.mock`
