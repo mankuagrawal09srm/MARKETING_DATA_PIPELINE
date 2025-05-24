@@ -1,103 +1,110 @@
-# src/snowflake_ingestion_from_s3.py
 import logging
-import snowflake.connector
+from utils import log_to_snowflake
 
-# --- Configure Logging ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# --- Snowflake Configuration ---
-SNOWFLAKE_ACCOUNT = "KXCRTSK-JT76968"
-SNOWFLAKE_USER = "Mayank"
-SNOWFLAKE_PASSWORD = "Mayank@09051995"
-SNOWFLAKE_WAREHOUSE = "COMPUTE_WH"
-SNOWFLAKE_DATABASE = "MARKETING_DATE"
-SNOWFLAKE_SCHEMA = "STAGE_DATE"
-
-# --- External Stage and Files ---
+# External stages and file format names used for COPY INTO commands
 S3_STAGE_CSV = "my_csv_stage"
-S3_STAGE_json = "my_json_stage"
-CSV_FILE = "my_data.csv"
-JSON_FILE = "my_data.json"
-
-def get_snowflake_connection():
-    try:
-        conn = snowflake.connector.connect(
-            account=SNOWFLAKE_ACCOUNT,
-            user=SNOWFLAKE_USER,
-            password=SNOWFLAKE_PASSWORD,
-            warehouse=SNOWFLAKE_WAREHOUSE,
-            database=SNOWFLAKE_DATABASE,
-            schema=SNOWFLAKE_SCHEMA
-        )
-        logging.info("Connected to Snowflake.")
-        return conn
-    except Exception as e:
-        logging.error(f"Snowflake connection failed: {e}")
-        raise
+S3_STAGE_JSON = "my_json_stage"
 
 def load_csv(cursor):
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS raw_customer_demographics (
-        customer_id INTEGER PRIMARY KEY,
-        first_name VARCHAR,
-        last_name VARCHAR,
-        email VARCHAR,
-        region VARCHAR,
-        signup_date DATE
-    );
-    """
-    copy_into_sql = f"""
-    COPY INTO raw_customer_demographics
-    FROM @{S3_STAGE_CSV}/
-    FILE_FORMAT = csv_format
-    PATTERN = '.*\\.csv';
-    """
-    cursor.execute(create_table_sql)
-    cursor.execute(copy_into_sql)
-    logging.info("CSV file loaded into raw_customer_demographics.")
+    step = "load_csv"  # Identifier for logging
 
-def load_json(cursor):
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS raw_clickstream (
-        event_id VARCHAR,
-        timestamp TIMESTAMP_LTZ,
-        user_id INTEGER,
-        event_type VARCHAR,
-        page_url VARCHAR,
-        duration_ms INTEGER
-    );
-    """
-    copy_into_sql = f"""
-    COPY INTO raw_clickstream
-    FROM @{S3_STAGE_json}/
-    FILE_FORMAT = json_format
-    MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
-    """
-    cursor.execute(create_table_sql)
-    cursor.execute(copy_into_sql)
-    logging.info("JSON file loaded into raw_clickstream.")
-
-def main():
-    conn = None
     try:
-        conn = get_snowflake_connection()
-        cursor = conn.cursor()
+        # Log start of CSV load (both local logging and Snowflake)
+        log_to_snowflake(cursor, 'INFO', step, 'Starting CSV data load')
+        logging.info("Loading CSV data into raw_customer_demographics...")
 
-        load_csv(cursor)
-        load_json(cursor)
+        # Create target table if it does not exist
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS raw_customer_demographics (
+            customer_id INTEGER PRIMARY KEY,
+            first_name VARCHAR,
+            last_name VARCHAR,
+            email VARCHAR,
+            region VARCHAR,
+            signup_date DATE
+        );
+        """
 
+        # Clear existing data to avoid duplicates (idempotency)
+        truncate_sql = "TRUNCATE TABLE raw_customer_demographics;"
+
+        # Copy data from the external CSV stage into Snowflake table
+        copy_into_sql = f"""
+        COPY INTO raw_customer_demographics
+        FROM @{S3_STAGE_CSV}/
+        FILE_FORMAT = csv_format
+        PATTERN = '.*\\.csv';
+        """
+
+        # Execute SQL statements sequentially
+        cursor.execute(create_table_sql)
+        cursor.execute(truncate_sql)
+        cursor.execute(copy_into_sql)
+
+        # Query to get number of rows loaded for logging
         cursor.execute("SELECT COUNT(*) FROM raw_customer_demographics;")
-        logging.info(f"CSV Table Record Count: {cursor.fetchone()[0]}")
+        rows_loaded = cursor.fetchone()[0]
 
-        cursor.execute("SELECT COUNT(*) FROM raw_clickstream;")
-        logging.info(f"JSON Table Record Count: {cursor.fetchone()[0]}")
+        # Log successful load with rows count
+        message = f"CSV file loaded successfully with {rows_loaded} rows."
+        log_to_snowflake(cursor, 'INFO', step, message, records_loaded=rows_loaded)
+        logging.info(message)
 
     except Exception as e:
-        logging.error(f"Data ingestion failed: {e}")
-    finally:
-        if conn:
-            conn.close()
-            logging.info("Snowflake connection closed.")
+        # Log error details if anything fails during the load
+        error_msg = f"Failed to load CSV data: {e}"
+        log_to_snowflake(cursor, 'ERROR', step, error_msg, error_details=str(e))
+        logging.error(error_msg)
+        raise  # Re-raise exception to stop further execution
 
-if __name__ == "__main__":
-    main()
+def load_json(cursor):
+    step = "load_json"  # Identifier for logging
+
+    try:
+        # Log start of JSON load (both local logging and Snowflake)
+        log_to_snowflake(cursor, 'INFO', step, 'Starting JSON data load')
+        logging.info("Loading JSON data into raw_clickstream...")
+
+        # Create target table if not exists
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS raw_clickstream (
+            event_id VARCHAR,
+            timestamp TIMESTAMP_LTZ,
+            user_id INTEGER,
+            event_type VARCHAR,
+            page_url VARCHAR,
+            duration_ms INTEGER
+        );
+        """
+
+        # Clear existing data for idempotency
+        truncate_sql = "TRUNCATE TABLE raw_clickstream;"
+
+        # Copy data from external JSON stage with case-insensitive matching on column names
+        copy_into_sql = f"""
+        COPY INTO raw_clickstream
+        FROM @{S3_STAGE_JSON}/
+        FILE_FORMAT = json_format
+        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
+        """
+
+        # Execute SQL statements
+        cursor.execute(create_table_sql)
+        cursor.execute(truncate_sql)
+        cursor.execute(copy_into_sql)
+
+        # Query to find rows loaded
+        cursor.execute("SELECT COUNT(*) FROM raw_clickstream;")
+        rows_loaded = cursor.fetchone()[0]
+
+        # Log success with rows loaded info
+        message = f"JSON file loaded successfully with {rows_loaded} rows."
+        log_to_snowflake(cursor, 'INFO', step, message, records_loaded=rows_loaded)
+        logging.info(message)
+
+    except Exception as e:
+        # Log error and details if loading fails
+        error_msg = f"Failed to load JSON data: {e}"
+        log_to_snowflake(cursor, 'ERROR', step, error_msg, error_details=str(e))
+        logging.error(error_msg)
+        raise
