@@ -11,6 +11,25 @@ def log_dq_result_to_snowflake(cursor, check_name, status, result_value, message
     cursor.execute(insert_sql, (check_name, status, result_value, message))
 
 
+def send_email_alert(subject, body):
+    """
+    Example placeholder function to send an email alert.
+    This is commented out because email sending is not implemented.
+    """
+    # import smtplib
+    # from email.mime.text import MIMEText
+    #
+    # msg = MIMEText(body)
+    # msg['Subject'] = subject
+    # msg['From'] = 'your_email@example.com'
+    # msg['To'] = 'alert_recipient@example.com'
+    #
+    # with smtplib.SMTP('smtp.example.com') as server:
+    #     server.login('username', 'password')
+    #     server.send_message(msg)
+    pass
+
+
 def run_dq_checks(cursor):
     logging.info("Running data quality checks...")
 
@@ -22,6 +41,8 @@ def run_dq_checks(cursor):
             msg = f"{null_count} NULL customer_id(s) found"
             logging.error(f"DQ Check Failed: {msg}")
             log_dq_result_to_snowflake(cursor, "Null customer_id check", "FAILED", null_count, msg)
+            # Uncomment below to send alert email
+            # send_email_alert("DQ Check Failed: Null customer_id", msg)
         else:
             logging.info("Null check passed: No NULL customer_id.")
             log_dq_result_to_snowflake(cursor, "Null customer_id check", "PASSED", 0, "No NULLs found")
@@ -38,6 +59,8 @@ def run_dq_checks(cursor):
             msg = f"{duplicates} duplicate customer_id(s) found"
             logging.error(f"DQ Check Failed: {msg}")
             log_dq_result_to_snowflake(cursor, "Unique customer_id check", "FAILED", duplicates, msg)
+            # Uncomment below to send alert email
+            # send_email_alert("DQ Check Failed: Duplicate customer_id", msg)
         else:
             logging.info("Uniqueness check passed: All customer_id values are unique.")
             log_dq_result_to_snowflake(cursor, "Unique customer_id check", "PASSED", unique_count, "All values unique")
@@ -47,12 +70,15 @@ def run_dq_checks(cursor):
             msg = "No rows found in raw_customer_demographics"
             logging.error(f"DQ Check Failed: {msg}")
             log_dq_result_to_snowflake(cursor, "Row count check", "FAILED", 0, msg)
+            # Uncomment below to send alert email
+            # send_email_alert("DQ Check Failed: No rows", msg)
         else:
             logging.info(f"Row count check passed: {total_count} rows found.")
             log_dq_result_to_snowflake(cursor, "Row count check", "PASSED", total_count, "Rows exist")
 
     except Exception as e:
         logging.error(f"Error running data quality checks: {e}")
-        # Optional: log this to Snowflake too
         log_dq_result_to_snowflake(cursor, "DQ Check Exception", "ERROR", 0, str(e))
+        # Uncomment below to send alert email
+        # send_email_alert("DQ Check Exception", str(e))
         raise
