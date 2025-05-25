@@ -112,3 +112,22 @@ Tracks general pipeline step execution and errors.
 **Logged From**: ingestion, transformation, and other pipeline components
 
 ---
+
+---
+
+## Table: feature_catalog
+
+Stores metadata for engineered features to support documentation and discovery.
+
+| Column Name            | Data Type     | Description                                      |
+|------------------------|---------------|--------------------------------------------------|
+| feature_name           | VARCHAR       | Unique feature identifier (Primary Key)          |
+| description            | STRING        | Business logic or purpose of the feature         |
+| data_type              | VARCHAR       | Snowflake-compatible data type                   |
+| source_table           | VARCHAR       | Table or source used to derive the feature       |
+| transformation_summary | STRING        | Summary of transformation logic                  |
+| update_frequency       | VARCHAR       | Refresh rate (e.g., daily, weekly)               |
+| quality_metrics        | STRING        | Range or null thresholds                         |
+| created_at             | TIMESTAMP     | Feature registration timestamp                   |
+
+**Populated from**: `src/feature_engineering.py`

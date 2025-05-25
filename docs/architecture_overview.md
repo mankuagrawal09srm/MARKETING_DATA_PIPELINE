@@ -88,7 +88,28 @@ These files are assumed to be uploaded to AWS S3 and accessed using Snowflake ex
 
 ---
 
-### 9. Tools and Technologies
+---
+
+### 9. Feature Catalog
+
+A lightweight conceptual feature catalog is implemented in Snowflake to track engineered features. This is not a full feature store but helps document feature definitions.
+
+- Table: `feature_catalog`
+- Created and populated via `src/feature_engineering.py`
+- Metadata tracked:
+  - Feature name
+  - Description / business logic
+  - Data type
+  - Source table(s)
+  - Transformation summary
+  - Update frequency
+  - Quality metrics (e.g., expected range, nulls)
+
+This catalog supports data lineage tracking, aids documentation, and can be extended for discovery tools or dashboards.
+
+---
+
+### 10. Tools and Technologies
 
 - Python (with Snowflake Connector)  
 - Snowflake Data Warehouse (tables, merges, clustering)  

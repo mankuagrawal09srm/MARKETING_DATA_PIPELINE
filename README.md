@@ -119,6 +119,24 @@ Logged into:
 
 ---
 
+### Feature Catalog
+
+A lightweight feature catalog is implemented as a Snowflake table named `feature_catalog`. It stores metadata for engineered features including:
+
+- `feature_name`: Unique feature identifier
+- `description`: Business logic or purpose
+- `data_type`: Data type in Snowflake
+- `source_table`: Raw or intermediate table used
+- `transformation_summary`: Logic used to generate the feature
+- `update_frequency`: How often the feature is refreshed
+- `quality_metrics`: Basic data quality expectations
+
+Features are inserted/updated via `src/feature_engineering.py`.
+
+This helps track available features, their lineage, and quality expectations for downstream consumers like data scientists.
+
+---
+
 ## 📚 Documentation
 
 - [`docs/architecture_overview.md`](docs/architecture_overview.md): Design and flow of the pipeline
@@ -135,6 +153,7 @@ Logged into:
 - Python’s standard `logging` module
 
 ---
+
 
 ## 🔮 Potential Future Enhancements
 
