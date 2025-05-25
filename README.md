@@ -156,10 +156,10 @@ This helps track available features, their lineage, and quality expectations for
 ![Iceberg Table in S3](docs/iceberg_table_snowflake.png)
 
 ### Execution Logs
-![Execution Logs](docs/ingestion_dq_logs.png)
+![Execution Logs](docs/ingestion_dq_logs_ss.png)
 
 ### Feature Engineering logs
-![Feature Code Snippet](docs/feature_pipe.png)
+![Feature Code Snippet](docs/feature_pipe_ss.png)
 
 ---
 
