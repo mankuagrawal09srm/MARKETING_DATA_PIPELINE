@@ -21,7 +21,7 @@ Marketing_data_pipeline/
 │   ├── utils.py                  # Helper functions (Snowflake connection, logger)
 │   ├── main.py                   # Script to orchestrate the pipeline
 │   ├── feature_engineering.py    # Conceptual feature testing
-│   └── transformations.py        # Future data transformations
+│   └── transformations.py        # data transformations
 ├── .env                          # Snowflake credentials (not committed)
 ├── README.md
 ```

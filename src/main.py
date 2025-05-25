@@ -3,6 +3,7 @@ from utils import get_snowflake_connection
 from data_ingestion import load_csv, load_json
 import logging
 from dq_checks import run_dq_checks
+from transformations import load_dim_customer, load_fact_click_events
 
 
 
@@ -19,6 +20,8 @@ def main():
         load_csv(cursor)
         load_json(cursor)
         run_dq_checks(cursor)
+        load_dim_customer(cursor)
+        load_fact_click_events(cursor)
 
         logging.info("Pipeline completed successfully.")
 
