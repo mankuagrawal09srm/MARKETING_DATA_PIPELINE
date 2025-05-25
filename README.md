@@ -12,7 +12,10 @@ Marketing_data_pipeline/
 ├── data/                         # Sample input files (CSV, JSON)
 ├── docs/                         # Documentation (architecture, data model)
 │   ├── architecture_overview.md
-│   └── data_model.md
+│   ├── data_models.md
+|   ├── data_flow_diagram.md
+│   ├── Scalability_plan.md
+│   └── feature_lineage.md
 ├── logs/                         # Log outputs
 │   └── ingestion.log
 ├── src/                          
@@ -141,6 +144,22 @@ This helps track available features, their lineage, and quality expectations for
 
 - [`docs/architecture_overview.md`](docs/architecture_overview.md): Design and flow of the pipeline
 - [`docs/data_model.md`](docs/data_model.md): Schema and table descriptions
+
+---
+
+## 📸 Visuals and Screenshots
+
+### Iceberg Table S3
+![Iceberg Table in S3](docs/ice_berg_s3_ss.png)
+
+### Iceberg Table View Snowflake
+![Iceberg Table in S3](docs/iceberg_table_snowflake.png)
+
+### Execution Logs
+![Execution Logs](docs/ingestion_dq_logs.png)
+
+### Feature Engineering logs
+![Feature Code Snippet](docs/feature_pipe.png)
 
 ---
 

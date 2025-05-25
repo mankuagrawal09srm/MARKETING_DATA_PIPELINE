@@ -67,7 +67,7 @@ Fact table storing customer click events.
 | Column Name   | Data Type | Description                           |
 |---------------|-----------|-------------------------------------|
 | event_id      | VARCHAR   | Primary key, matches raw event_id   |
-| customer_id   | VARCHAR   | Foreign key to `dim_customer`       |
+| user_id   | VARCHAR   | Foreign key to `dim_customer`       |
 | event_type    | VARCHAR   | Event type                         |
 | page_url      | VARCHAR   | Page URL where event occurred       |
 | duration_ms   | NUMBER    | Event duration in milliseconds      |
@@ -129,5 +129,6 @@ Stores metadata for engineered features to support documentation and discovery.
 | update_frequency       | VARCHAR       | Refresh rate (e.g., daily, weekly)               |
 | quality_metrics        | STRING        | Range or null thresholds                         |
 | created_at             | TIMESTAMP     | Feature registration timestamp                   |
+| last_updated_at        | TIMESTAMP     | data updated timestamp                           |
 
 **Populated from**: `src/feature_engineering.py`

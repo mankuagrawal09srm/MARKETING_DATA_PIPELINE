@@ -11,7 +11,7 @@ def log_dq_result_to_snowflake(cursor, check_name, status, result_value, message
     cursor.execute(insert_sql, (check_name, status, result_value, message))
 
 
-def send_email_alert(subject, body):
+def send_email_alert(subject, body): ## conceptually placed.
     """
     Example placeholder function to send an email alert.
     This is commented out because email sending is not implemented.
