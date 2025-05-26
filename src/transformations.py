@@ -1,6 +1,7 @@
 import logging
 from utils import log_to_snowflake
 
+# Load and populate the dimension table for customer data
 def load_dim_customer(cursor):
     logging.info("Populating dim_customer...")
 
@@ -46,7 +47,7 @@ def load_dim_customer(cursor):
         log_to_snowflake(cursor, "ERROR", "load_dim_customer", "Failed to load dim_customer", error_details=str(e))
         raise
 
-
+# Load and populate the fact table for click event data
 def load_fact_click_events(cursor):
     logging.info("Populating fact_click_events...")
 
