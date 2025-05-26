@@ -106,13 +106,10 @@ Both datasets are stored in an S3 bucket and read via Snowflake external stages.
 - Uniqueness validation on `customer_id`
 - Row count validation
 
-Logged into:
+## Logging:
 - Local log file
 - Optionally: Snowflake table `dq_check_logs`
 
-### Logging
-- Local: `logs/ingestion.log`
-- Optional Snowflake table: `PIPELINE_LOGS`
 
 ### Performance Optimization
 - Adds clustering key on:
