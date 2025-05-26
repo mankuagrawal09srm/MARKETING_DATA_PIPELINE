@@ -60,7 +60,7 @@ Both datasets are stored in an S3 bucket and read via Snowflake external stages.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/Marketing_data_pipeline.git
+   git clone https://github.com/mankuagrawal09srm/MARKETING_DATA_PIPELINE.git
    cd Marketing_data_pipeline
    ```
 
@@ -209,6 +209,38 @@ This helps track available features, their lineage, and quality expectations for
 
 ### Feature Engineering logs
 ![Feature Code Snippet](docs/feature_pipe_ss.png)
+
+---
+
+### Testing Strategy
+
+To ensure reliability and correctness of the pipeline components, the following testing approach has been adopted or can be planned:
+
+## Unit Testing
+Purpose: Validate individual functions/modules in isolation (e.g., parsing, transformations, data quality logic).
+
+- Use pytest or unittest for writing test cases.
+- Mock Snowflake connections and AWS S3 using unittest.mock or pytest-mock.
+- Example tests:
+  - Validate parsing logic in transformations.py
+  - Test null/duplicate checks in dq_checks.py
+  - Test utility functions in utils.py
+
+
+## Integration Testing
+Purpose: Test the interaction between modules end-to-end (e.g., ingestion + transformation + DQ checks).
+
+- Use sample datasets stored in data/ to simulate real runs.
+- Run src/main.py in a controlled environment with a test Snowflake schema.
+- Validate:
+  - Table creation and loading works as expected
+  - Logs are written correctly
+  - DQ check failures are handled properly
+
+## Logging & Monitoring
+- All scripts log execution status, row counts, and errors to both:
+  - Local log files (logs/)
+  - Snowflake logging tables (e.g., pipeline_logs, dq_check_logs)(implemented)
 
 ---
 
