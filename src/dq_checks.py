@@ -24,7 +24,7 @@ def send_email_alert(subject, body): ## conceptually placed.
     # msg['From'] = 'your_email@example.com'
     # msg['To'] = 'alert_recipient@example.com'
     #
-    # with smtplib.SMTP('smtp.example.com') as server:
+    # with smtplib.SMTP('smtp.example.com') as server: #smtp.office365.com as an example to use outlook
     #     server.login('username', 'password')
     #     server.send_message(msg)
     pass

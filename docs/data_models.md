@@ -23,8 +23,7 @@ Stores structured customer demographic data from CSV files.
 
 ---
 
-## Table: raw_clickstream_events
-
+## Table: raw_clickstream
 Stores clickstream event data from JSON files.
 
 | Column Name   | Data Type     | Description                          |
@@ -74,7 +73,7 @@ Fact table storing customer click events.
 | event_time    | TIMESTAMP | Timestamp of the event              |
 | created_at    | TIMESTAMP | Record creation timestamp           |
 
-**Populated From**: `raw_clickstream_events` via transformation  
+**Populated From**: `raw_clickstream` via transformation  
 **Insert Method**: Insert new records (no duplicates assumed in source)
 
 ---
