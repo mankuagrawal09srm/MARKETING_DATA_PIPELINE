@@ -49,8 +49,8 @@ This pipeline is designed to load marketing engagement data — customer demogra
 
 ## 📥 Input Datasets
 
-- **CSV**: Customer demographics (`customer_id`, `first_name`, `email`, `signup_date`)
-- **JSON**: Clickstream events (`event_type`, `page_url`, `duration_ms`)
+- **CSV**: Customer demographics (`customer_id`, `first_name`, `email`,`region`, `signup_date`)
+- **JSON**: Clickstream events (`event_id`, `timestamp`, `user_id`,`event_type`, `page_url`, `duration_ms`)
 
 Both datasets are stored in an S3 bucket and read via Snowflake external stages.
 
