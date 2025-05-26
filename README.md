@@ -122,6 +122,55 @@ Logged into:
 
 ---
 
+## Feature Engineering Pipeline (Independent Module)
+
+The `src/feature_engineering.py` script is implemented as a **standalone pipeline** that reads cleaned data from Snowflake, performs transformations to derive customer features, and stores the results in an Apache Iceberg table.
+
+### 📥 Inputs
+- `raw_customer_demographics` – Customer profile and sign-up data
+- `raw_clickstream` – JSON-based web interaction logs
+
+---
+
+### ⚙️ Execution
+
+Run the feature pipeline separately from the ingestion flow:
+
+```bash
+python src/feature_engineering.py
+```
+
+> Feature metadata is synced to `feature_catalog`  
+> Feature records are stored in `feature_engineered_iceberg` (Iceberg table)
+---
+
+---
+
+### 📊 Architecture Diagram
+```
+ [S3 CSV + JSON]
+           |
+       [Ingestion]
+           |
+     +------------+      
+     | Snowflake  | <---+
+     +------------+     |
+           |            |
+      [Transformations] |
+           |            |
+      [Cleaned Tables]  |
+           |            |
+       +----------------+
+       |
+ [Feature Pipeline]
+       |
+  +----------------------+
+  |  feature_engineered  |
+  |     + feature_catalog|
+  +----------------------+
+```
+---
+
 ### Feature Catalog
 
 A lightweight feature catalog is implemented as a Snowflake table named `feature_catalog`. It stores metadata for engineered features including:
