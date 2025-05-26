@@ -258,7 +258,7 @@ Purpose: Test the interaction between modules end-to-end (e.g., ingestion + tran
 ## 🔮 Potential Future Enhancements
 
 - Orchestration with Apache Airflow or AWS Step Functions
-- Alerting for failed DQ checks (Slack, email)
+- Alerting for failed DQ checks (Slack, email)(sample function placed in dq_checks.py)
 - Quarantine zone for failed records
 - Schema validation and record freshness checks
 - Unit testing using `pytest` and `unittest.mock`
